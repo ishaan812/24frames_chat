@@ -4,11 +4,13 @@ import Peer from "simple-peer";
 import Editor from "./editor";
 import {
   BrowserRouter as Router,
+  Redirect,
   Routes,
   Route,
   Link,
   useParams
 } from "react-router-dom";
+import { data } from "autoprefixer";
 
 var socket;
 function App() {
@@ -21,9 +23,10 @@ function App() {
   const [CallAccepted, setCallAccepted] = useState("");
   const [callended, setcallended] = useState("");
   const [Message, setMessage] = useState();
-  const [Room, setRoom] = useState("");
+  const Room = useParams().room;
   const [sendername,Setsendername] = useState("");
   const [userid,Setuserid] = useState("");
+  const [otherusername, Setotherusername] = useState("");
 
 
   // const myvideo= useRef(null);
@@ -34,6 +37,25 @@ function App() {
     const messagebox= document.createElement("div");
     messagebox.innerHTML= "<div><strong>"+name+"</strong>:"+message+"</div>";
     document.getElementById("chatwindow").appendChild(messagebox);
+  }
+  
+  const displayUsers=(users)=>{
+    users.forEach(element => {
+      const userbox= document.createElement("div");
+      userbox.innerHTML= "<button id="+element+" value="+element+" style='border-radius: 4px; background-color: #008CBA; margin-top: 10px; font-size: 30px;'>"+element+"</button>";
+      document.getElementById("userwindow").appendChild(userbox);
+      document.getElementById(element).addEventListener(onclick, ()=>{
+        RedirecttoRoom(element.value)  
+      })
+    })
+  }
+
+  const displayRooms=(rooms)=>{
+    rooms.forEach(element => {
+      const roombox= document.createElement("div");
+      roombox.innerHTML= "<button style='border-radius: 4px; background-color: #008CBA; margin-top: 10px; font-size: 30px;'>"+element+"</button>";
+      document.getElementById("roomwindow").appendChild(roombox);
+    })
   }
 
   const displayId=(Id)=>{
@@ -48,23 +70,22 @@ function App() {
 
   const SendMessage = (e) => {
     if(Message == undefined ){
-      JoinRoom(Room);
+      alert("Please enter a message");
     }
     else{
       displayMessage(Message, Name);
       socket.emit("sendmessage", Message, Room, Name);
     }
   }
-  
-  const JoinRoom = () => {
-    console.log("Joining room");
-    socket.emit("joinroom", Room);
-    displayMessage("You have joined the room "+  Room); 
+
+  const RedirecttoRoom = (e) => {
+      socket.emit("createprivateroom", Name, otherusername);
   }
+
 
   useEffect(() => {
     console.log(Name);
-    socket= io(process.env.REACT_APP_LINK);
+    socket= io("localhost:3000");
     setId(socket.id);
     // navigator.mediaDevices.getUserMedia({video: true, audio: true}).then((stream)=>{
     //   setStream(stream);
@@ -72,12 +93,33 @@ function App() {
     // });
     socket.on('connect', ()=>{
       displayId(socket.id);
+      console.log(Room);
 
 
       socket.emit("sendusername", Name);
-      socket.emit("getpreviousmessages", "general");
+      socket.emit("getpreviousmessages", Room);
+      socket.emit("getuserlist", Room);
+      socket.emit("getroomlist", userid);
       
-      
+      socket.on("userlist", (userlist)=>{
+        displayUsers(userlist);
+      })
+
+      socket.on("roomlist", (roomlist)=>{
+        displayRooms(roomlist);
+      })
+
+      socket.on("privateroomrequest", (roomname)=>{
+        // console.log(roomname);
+        socket.emit("joinprivateroom", roomname);
+      })
+
+      socket.on("roomcreated", (roomname)=>{
+        // window.redirect("/"+Name+"/"+roomname);
+        console.log("created room");
+        window.location.href= "/"+Name+"/"+roomname;
+      })
+
       socket.on("previousmessages", (data) =>{
         data.forEach(element => {
             displayMessage(element.Message, element.Name);
@@ -90,18 +132,26 @@ function App() {
         displayMessage(message, name);
       });
       
+      
       socket.on("userid", (data) => {
         console.log(data);
         Setuserid(data);
       });
+
+      socket.on("badinput",()=>{
+        alert("Bad Input");
+      })
+      socket.on("roomexists",()=>{
+        alert("Room Exists");
+      })
     })
 
 
-    socket.on("callrequest", (data)=>{
-      setCallerId(data.callerId);
-      setCallerSignal(data.signal);
-      setRecievingCall(true);
-    })
+    // socket.on("callrequest", (data)=>{
+    //   setCallerId(data.callerId);
+    //   setCallerSignal(data.signal);
+    //   setRecievingCall(true);
+    // })
 
   }, []);
 
@@ -153,15 +203,17 @@ function App() {
       <Editor SetMessage={MessageChild}/>
       
       <div className="flex-wrap align-items-center">
-        <h2>Room:</h2>
-        <input type="text" id="Room" onChange={(e)=>{setRoom(e.target.value)}} className="bg-gray-50 border mb-10 border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="Room" required/>
-      </div> 
+        <br/>
+        <h2>Create Private Room:</h2>
+        <input type="text" id="otherusername" onChange={(e)=>{Setotherusername(e.target.value)}} className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 w-1/3" placeholder="other username" required/>
+      </div>
+      <button onClick={(e)=>{RedirecttoRoom(e)}} type="button" className="w-1/3 text-white bg-blue-700 hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 font-medium rounded-full text-sm px-16 py-2.5 text-center mr-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">Create Private Room</button> 
       
       <div id="id"></div>
       
-      <button onClick={(e)=>{SendMessage(e)}} type="button" className=" w-full text-white bg-blue-700 hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 font-medium rounded-full text-sm px-16 py-2.5 text-center mr-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">Submit</button>
+      <button onClick={(e)=>{SendMessage(e)}} type="button" className="w-full text-white bg-blue-700 hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 font-medium rounded-full text-sm px-16 py-2.5 text-center mr-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">Submit</button>
       
-      <div id="chatwindow" className="border border-red-200"></div> 
+      {/* <div id="chatwindow" className="border border-red-200"></div>  */}
       <br/>
 
       {/* <input name="id to call" onChange={(e)=>{setCallerId(e.target.value);console.log(callerId)}} placeholder="id to call"></input><br/>
@@ -171,8 +223,19 @@ function App() {
       <video ref={uservideo} playsInline autoPlay style={{width: "300px"}} /> */}
 
 
-      
-      <div id="chatwindow" className="px-10">
+      <div className="grid grid-cols-3 gap-2">
+        <div id="chatbox" className="w-1/3">
+          <h1 className="text-5xl overflow-y-hidden">Chat:</h1>
+          <div id="chatwindow" ></div>
+        </div>
+        <div id="users">
+          <h1 className="text-5xl overflow-y-hidden">Users:</h1>
+          <div id="userwindow" className="w-1/3"></div>
+        </div>
+        <div id="rooms">
+          <h1 className="text-5xl overflow-y-hidden">Rooms:</h1>
+          <div id="roomwindow" className="w-1/3"></div>
+        </div>
       </div>
       
     </div>
