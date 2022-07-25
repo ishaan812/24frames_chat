@@ -16,7 +16,8 @@ const App = () => {
         <Navbar/>
         <Router>
             <Routes>
-                <Route path="/:name/:room" exact element={<Main/>} />
+                <Route path="/:name/:room" exact element={<Main type={"normal"}/>} />
+                {/* <Route path="/private/:name/:room" element={<Main type={"private"}/>} /> */}
                 <Route path="/" element={<Login/>} />
             </Routes>
         </Router>
