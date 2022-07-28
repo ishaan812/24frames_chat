@@ -1,5 +1,5 @@
 import React,{useEffect, useState, useRef} from "react";
-import {io} from "socket.io-client";
+import * as io from 'socket.io-client'
 import Peer from "simple-peer";
 import Editor from "./editor";
 import {
@@ -69,7 +69,7 @@ function App({Type}) {
       alert("Please enter a message");
     }
     else{
-      console.log("hello");
+      console.log(Room);
       displayMessage(Message, Name);
       socket.emit("sendmessage", Message, Room, Name);
     }
@@ -125,7 +125,9 @@ function App({Type}) {
 
       socket.on("recievemessage", (message, name) => {
         console.log(message);
-        displayMessage(message, name);
+        if(name!=Name){
+          displayMessage(message, name);
+        }
       });
 
       socket.on("groupcreated", (groupname) => {
@@ -142,6 +144,9 @@ function App({Type}) {
       })
       socket.on("emptyroom",()=>{
         alert("Room is Empty");
+      })
+      socket.on("disconnectlol",()=>{
+        document.location.reload();
       })
     })
 
