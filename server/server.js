@@ -1,21 +1,16 @@
-const { instrument }= require('@socket.io/admin-ui');
 const express = require('express');
 const cors = require('cors');
-const https = require('https');
+const http = require('http');
 const mysql= require('mysql');
 const { Console } = require('console');
 const app=express();
 const dotenv = require('dotenv');
-const server= https.createServer(app);
+const server= http.createServer(app);
 const io = require("socket.io")(server,
     {
-        // transports: ["websocket"],
         cors: {
             origin: '*',
-        }
-        // pingInterval: 1000 * 60 * 5,
-        // pingTimeout: 1000 * 60 * 3
-        
+        }   
     });
 var usertable= new Map();
 var name;
@@ -120,12 +115,7 @@ io.on("connection", async(socket) => {
                     console.log(result)
                 })
             })
-<<<<<<< HEAD
         } 
-=======
-        }
-
->>>>>>> parent of d50496e (haaash)
         else{
             io.to(room).emit("recievemessage", message, name);
             selectid= "SELECT `UID` FROM `username` WHERE Username='"+name+"'";
@@ -156,7 +146,6 @@ io.on("connection", async(socket) => {
         con.query("SELECT * FROM roominfo WHERE RoomName='"+roomname+"' OR RoomName='"+altroomname+"'", (err, result) => {
             if(err) throw err;
             if(result.length!==0){
-<<<<<<< HEAD
                 if(result[0].RoomName===roomname){
                     socket.join(roomname);
                     socket.emit("roomexists",roomname);
@@ -165,9 +154,6 @@ io.on("connection", async(socket) => {
                     socket.join(altroomname);
                     socket.emit("roomexists",altroomname);
                 }
-=======
-                socket.emit("roomexists");
->>>>>>> parent of d50496e (haaash)
             }
             else{
                 createroominfosql="INSERT INTO `roominfo`(`RoomID`, `Roomname`, `UserLimit`, `DateCreated`) VALUES (NULL,'"+roomname+"',2, NOW())";
@@ -201,7 +187,6 @@ io.on("connection", async(socket) => {
         }
     })
 
-<<<<<<< HEAD
     socket.on("creategrouproom", (groupname, UserName) => {
         creategroupsql="INSERT INTO `roominfo`(`RoomID`, `Roomname`, `UserLimit`, `DateCreated`) VALUES (NULL,'"+groupname+"',100, NOW())";
         con.query(creategroupsql, (err, result)=> {
@@ -215,8 +200,6 @@ io.on("connection", async(socket) => {
         socket.emit("groupcreated", groupname);
     })
 
-=======
->>>>>>> parent of d50496e (haaash)
     socket.on("joinprivateroom", (roomname) => {
         socket.join(roomname);
         socket.emit("roomcreated", roomname);
@@ -268,7 +251,6 @@ io.on("connection", async(socket) => {
     // })
 
 
-<<<<<<< HEAD
     socket.on("disconnect", () => {
         
         console.log("disconnected" + socket.id);
@@ -282,27 +264,12 @@ io.on("connection", async(socket) => {
         })
         socket.broadcast.emit("disconnectlol"); 
     })
-=======
-    // socket.on("disconnect", () => {
-    //     socket.broadcast.emit("call disconnect"); 
-    //     console.log("disconnected " + socket.id);
-    // })
->>>>>>> parent of d50496e (haaash)
 
     
     
 })
 
 
-<<<<<<< HEAD
-=======
-
-
-instrument(io, {auth: false })
-
-
-
->>>>>>> parent of d50496e (haaash)
 server.listen(process.env.PORT, () => {
     console.log("Server started on port "+ process.env.PORT);
 });

@@ -1,5 +1,5 @@
 import React,{useEffect, useState, useRef} from "react";
-import * as io from 'socket.io-client'
+import io from 'socket.io-client'
 import Peer from "simple-peer";
 import Editor from "./editor";
 import {
@@ -73,10 +73,7 @@ function App() {
       alert("Please enter a message");
     }
     else{
-<<<<<<< HEAD
       console.log(Room);
-=======
->>>>>>> parent of d50496e (haaash)
       displayMessage(Message, Name);
       socket.emit("sendmessage", Message, Room, Name);
     }
