@@ -1,5 +1,9 @@
 import React,{useEffect, useState, useRef} from "react";
+<<<<<<< HEAD
 import io from 'socket.io-client'
+=======
+import {io} from "socket.io-client";
+>>>>>>> parent of d64cbc3 (aa)
 import Peer from "simple-peer";
 import Editor from "./editor";
 import {
@@ -73,7 +77,7 @@ function App() {
       alert("Please enter a message");
     }
     else{
-      console.log(Room);
+      console.log("hello");
       displayMessage(Message, Name);
       socket.emit("sendmessage", Message, Room, Name);
     }
@@ -130,9 +134,7 @@ function App() {
 
       socket.on("recievemessage", (message, name) => {
         console.log(message);
-        if(name!=Name){
-          displayMessage(message, name);
-        }
+        displayMessage(message, name);
       });
       
       
@@ -146,9 +148,6 @@ function App() {
       })
       socket.on("roomexists",()=>{
         alert("Room Exists");
-      })
-      socket.on("disconnectlol",()=>{
-        document.location.reload();
       })
     })
 

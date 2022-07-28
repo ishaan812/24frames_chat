@@ -87,9 +87,6 @@ io.on("connection", async(socket) => {
 
 
     socket.on("getpreviousmessages", (room) =>{
-        if(room!=="" || room!=="general"){
-            socket.join(room);
-        }
         con.query("SELECT * FROM messages WHERE Roomname = '"+room+"'", (err, result) => {
             if (err) throw err;
             result.forEach(element => {
@@ -115,15 +112,31 @@ io.on("connection", async(socket) => {
                     console.log(result)
                 })
             })
-        } 
+        }
+        // if(room !== '' && type === "normal")
+        // {
+        //     socket.in(room).emit("recievemessage", messagestring);
+        //     selectid= "SELECT `UID` FROM `username` WHERE Username='"+name+"'";
+        //     con.query (selectid, (err, result)=> {
+        //         if (err) throw err;
+        //         messagesql= "INSERT INTO `messages`(`DateSent`, `UID`, `Message`, `Roomname`) VALUES (NOW(),'"+UserID+"','"+message+"','"+room+"')";
+        //         con.query(messagesql, (err, result)=> {
+        //             if (err) throw err;
+        //             console.log(result);
+        //         })
+        //     })
+        // }
         else{
-            io.to(room).emit("recievemessage", message, name);
+            messagestring= room+":  "+message
+            socket.broadcast.to(room).emit("recievemessage", messagestring);
             selectid= "SELECT `UID` FROM `username` WHERE Username='"+name+"'";
             con.query (selectid, (err, result)=> {
+                console.log(result);
                 if (err) throw err;
                 messagesql= "INSERT INTO `messages`(`DateSent`, `UID`, `Message`, `Roomname`) VALUES (NOW(),'"+UserID+"','"+message+"','"+room+"')";
                 con.query(messagesql, (err, result)=> {
                     if (err) throw err;
+                    console.log(result)
                 })
             })
         }
@@ -147,11 +160,9 @@ io.on("connection", async(socket) => {
             if(err) throw err;
             if(result.length!==0){
                 if(result[0].RoomName===roomname){
-                    socket.join(roomname);
                     socket.emit("roomexists",roomname);
                 }
                 else{
-                    socket.join(altroomname);
                     socket.emit("roomexists",altroomname);
                 }
             }
@@ -187,22 +198,22 @@ io.on("connection", async(socket) => {
         }
     })
 
-    socket.on("creategrouproom", (groupname, UserName) => {
-        creategroupsql="INSERT INTO `roominfo`(`RoomID`, `Roomname`, `UserLimit`, `DateCreated`) VALUES (NULL,'"+groupname+"',100, NOW())";
-        con.query(creategroupsql, (err, result)=> {
-            con.query("SELECT * FROM roominfo WHERE Roomname='"+groupname+"'", (err, result)=>{
-                roomid=result[0].RoomID;
-                con.query("INSERT INTO `rooms`(`RoomID`, `UID`, `DateJoined`) VALUES ("+roomid+","+ids[users.findIndex(Name=>Name===UserName)]+", NOW())", (err, result)=>{
-                })
-            })
-        })
-        socket.join(groupname);
-        socket.emit("groupcreated", groupname);
-    })
+    // socket.on("creategrouproom", (groupname, UserName) => {
+    //     creategroupsql="INSERT INTO `roominfo`(`RoomID`, `Roomname`, `UserLimit`, `DateCreated`) VALUES (NULL,'"+groupname+"',100, NOW())";
+    //     con.query(creategroupsql, (err, result)=> {
+    //         con.query("SELECT * FROM roominfo WHERE Roomname='"+groupname+"'", (err, result)=>{
+    //             roomid=result[0].RoomID;
+    //             con.query("INSERT INTO `rooms`(`RoomID`, `UID`, `DateJoined`) VALUES ("+roomid+","+ids[users.findIndex(Name=>Name===UserName)]+", NOW())", (err, result)=>{
+    //             })
+    //         })
+    //     })
+    //     socket.join(groupname);
+    //     socket.emit("groupcreated", groupname);
+    // })
 
     socket.on("joinprivateroom", (roomname) => {
-        socket.join(roomname);
         socket.emit("roomcreated", roomname);
+        socket.join(roomname);
     })
 
     
@@ -252,8 +263,9 @@ io.on("connection", async(socket) => {
 
 
     socket.on("disconnect", () => {
+        socket.broadcast.emit("call disconnect"); 
+        console.log("disconnected " + socket.id);
         
-        console.log("disconnected" + socket.id);
         con.query("SELECT * FROM `username` WHERE Socket='"+socket.id+"'", (err, result)=> {
             if(err) throw console.log("username error");
             if(result.length===0){console.log("UserError")}
@@ -262,7 +274,6 @@ io.on("connection", async(socket) => {
                 activeusers.splice(activeusers.indexOf(Username), 1);
             }
         })
-        socket.broadcast.emit("disconnectlol"); 
     })
 
     
@@ -270,6 +281,14 @@ io.on("connection", async(socket) => {
 })
 
 
+
+
+instrument(io, {auth:{ type: "basic",
+username: "admin",
+password: "$2b$10$heqvAkYMez.Va6Et2uXInOnkCT6/uQj1brkrbyG3LpopDklcq7ZOS" }})
+
+
+
 server.listen(process.env.PORT, () => {
-    console.log("Server started on port "+ process.env.PORT);
+    console.log("Server started on port 3000");
 });
