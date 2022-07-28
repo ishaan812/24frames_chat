@@ -16,8 +16,12 @@ const App = () => {
         <Navbar/>
         <Router>
             <Routes>
+<<<<<<< HEAD
                 <Route path="/:name/:room" exact element={<Main type={"normal"}/>} />
                 <Route path="/private/:name/:room" element={<Main type={"private"}/>} />
+=======
+                <Route path="/:name/:room" exact element={<Main/>} />
+>>>>>>> parent of d50496e (haaash)
                 <Route path="/" element={<Login/>} />
             </Routes>
         </Router>

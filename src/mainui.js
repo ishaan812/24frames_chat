@@ -13,7 +13,7 @@ import {
 import { data } from "autoprefixer";
 
 var socket;
-function App({Type}) {
+function App() {
   const [Id, setId] = useState("");
   const [Stream, setStream] = useState();
   const [recievingCall, setRecievingCall] = useState(false);
@@ -24,8 +24,9 @@ function App({Type}) {
   const [callended, setcallended] = useState("");
   const [Message, setMessage] = useState();
   const Room = useParams().room;
+  const [sendername,Setsendername] = useState("");
+  const [userid,Setuserid] = useState("");
   const [otherusername, Setotherusername] = useState("");
-  const [groupname,Setgroupname]= useState("");
 
 
   // const myvideo= useRef(null);
@@ -39,19 +40,22 @@ function App({Type}) {
   }
   
   const displayUsers=(users)=>{
-    let userwindow=document.getElementById("userwindow")
-    userwindow.innerHTML="";
     users.forEach(element => {
       const userbox= document.createElement("div");
-      userbox.innerHTML= "<button id="+element+" style='border-radius: 4px; background-color: #008CBA; margin-top: 10px; font-size: 30px;'>"+element+"</button>";
-      userwindow.appendChild(userbox);
+      userbox.innerHTML= "<button id="+element+" value="+element+" style='border-radius: 4px; background-color: #008CBA; margin-top: 10px; font-size: 30px;'>"+element+"</button>";
+      document.getElementById("userwindow").appendChild(userbox);
+      document.getElementById(element).addEventListener(onclick, ()=>{
+        RedirecttoRoom(element.value)  
+      })
     })
   }
 
-  const displayRooms=(room)=>{
-    const roombox= document.createElement("div");
-    roombox.innerHTML= "<button style='border-radius: 4px; background-color: #008CBA; margin-top: 10px; font-size: 20px;'>"+room+"</button>";
-    document.getElementById("roomwindow").appendChild(roombox);
+  const displayRooms=(rooms)=>{
+    rooms.forEach(element => {
+      const roombox= document.createElement("div");
+      roombox.innerHTML= "<button style='border-radius: 4px; background-color: #008CBA; margin-top: 10px; font-size: 30px;'>"+element+"</button>";
+      document.getElementById("roomwindow").appendChild(roombox);
+    })
   }
 
   const displayId=(Id)=>{
@@ -69,7 +73,10 @@ function App({Type}) {
       alert("Please enter a message");
     }
     else{
+<<<<<<< HEAD
       console.log(Room);
+=======
+>>>>>>> parent of d50496e (haaash)
       displayMessage(Message, Name);
       socket.emit("sendmessage", Message, Room, Name);
     }
@@ -79,13 +86,10 @@ function App({Type}) {
       socket.emit("createprivateroom", Name, otherusername);
   }
 
-  const RedirecttoGroup = (e) => {
-    socket.emit("creategrouproom",groupname, Name);
-  }
 
   useEffect(() => {
     console.log(Name);
-    socket= io("http://localhost:3000");
+    socket= io("localhost:3000");
     setId(socket.id);
     // navigator.mediaDevices.getUserMedia({video: true, audio: true}).then((stream)=>{
     //   setStream(stream);
@@ -93,23 +97,31 @@ function App({Type}) {
     // });
     socket.on('connect', ()=>{
       displayId(socket.id);
+      console.log(Room);
+
 
       socket.emit("sendusername", Name);
       socket.emit("getpreviousmessages", Room);
       socket.emit("getuserlist", Room);
-      socket.emit("getroomlist", Name);
+      socket.emit("getroomlist", userid);
+      
+      socket.on("userlist", (userlist)=>{
+        displayUsers(userlist);
+      })
 
       socket.on("roomlist", (roomlist)=>{
         displayRooms(roomlist);
       })
 
       socket.on("privateroomrequest", (roomname)=>{
+        // console.log(roomname);
         socket.emit("joinprivateroom", roomname);
       })
 
       socket.on("roomcreated", (roomname)=>{
+        // window.redirect("/"+Name+"/"+roomname);
         console.log("created room");
-        window.location.href= "/private/"+Name+"/"+roomname;
+        window.location.href= "/"+Name+"/"+roomname;
       })
 
       socket.on("previousmessages", (data) =>{
@@ -119,31 +131,24 @@ function App({Type}) {
         );
       })
 
-      socket.on("activeuserlist", (userlist)=>{
-        displayUsers(userlist);
-      })
-
       socket.on("recievemessage", (message, name) => {
         console.log(message);
         if(name!=Name){
           displayMessage(message, name);
         }
       });
-
-      socket.on("groupcreated", (groupname) => {
-        console.log("created group");
-        window.location.href= "/"+Name+"/"+groupname;
-      })
       
+      
+      socket.on("userid", (data) => {
+        console.log(data);
+        Setuserid(data);
+      });
 
       socket.on("badinput",()=>{
         alert("Bad Input");
       })
-      socket.on("roomexists",(roomname)=>{
-        window.location.href="/private/"+Name+"/"+roomname;
-      })
-      socket.on("emptyroom",()=>{
-        alert("Room is Empty");
+      socket.on("roomexists",()=>{
+        alert("Room Exists");
       })
       socket.on("disconnectlol",()=>{
         document.location.reload();
@@ -206,25 +211,13 @@ function App({Type}) {
 
       <Editor SetMessage={MessageChild}/>
       
-      <div className="grid grid-cols-2">
-        <div>
-          <div className="flex-wrap align-items-center">
-            <br/>
-            <h2>Create/Join Private Room:</h2>
-            <input type="text" id="otherusername" onChange={(e)=>{Setotherusername(e.target.value)}} className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 w-1/3" placeholder="other username" required/>
-          </div>
-          <button onClick={(e)=>{RedirecttoRoom(e)}} type="button" className="w-2/3 text-white bg-blue-700 hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 font-medium rounded-full text-sm px-16 py-2.5 text-center mr-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">Create Private Room</button> 
-        </div>
-        <div>
-          <div className="flex-wrap align-items-center">
-            <br/>
-            <h2>Create Group:</h2>
-            <input type="text" id="groupname" onChange={(e)=>{Setgroupname(e.target.value)}} className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 w-1/3" placeholder="group name" required/>
-          </div>
-          <button onClick={(e)=>{RedirecttoGroup(e)}} type="button" className="w-2/3 text-white bg-blue-700 hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 font-medium rounded-full text-sm px-16 py-2.5 text-center mr-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">Create Group</button> 
-        </div>
+      <div className="flex-wrap align-items-center">
+        <br/>
+        <h2>Create Private Room:</h2>
+        <input type="text" id="otherusername" onChange={(e)=>{Setotherusername(e.target.value)}} className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 w-1/3" placeholder="other username" required/>
       </div>
-
+      <button onClick={(e)=>{RedirecttoRoom(e)}} type="button" className="w-1/3 text-white bg-blue-700 hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 font-medium rounded-full text-sm px-16 py-2.5 text-center mr-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">Create Private Room</button> 
+      
       <div id="id"></div>
       
       <button onClick={(e)=>{SendMessage(e)}} type="button" className="w-full text-white bg-blue-700 hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 font-medium rounded-full text-sm px-16 py-2.5 text-center mr-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">Submit</button>
@@ -245,7 +238,7 @@ function App({Type}) {
           <div id="chatwindow" ></div>
         </div>
         <div id="users">
-          <h1 className="text-5xl overflow-y-hidden">Active Users:</h1>
+          <h1 className="text-5xl overflow-y-hidden">Users:</h1>
           <div id="userwindow" className="w-1/3"></div>
         </div>
         <div id="rooms">
