@@ -1,5 +1,9 @@
 import React,{useEffect, useState, useRef} from "react";
+<<<<<<< Updated upstream
 import {io} from "socket.io-client";
+=======
+import io from 'socket.io-client'
+>>>>>>> Stashed changes
 import Peer from "simple-peer";
 import Editor from "./editor";
 import {

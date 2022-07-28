@@ -37,7 +37,6 @@ var con = mysql.createConnection({
     database: process.env.DB_NAME,
 });
 
-
 io.on("connection", async(socket) => {
     console.log(socket.id);
     setInterval(()=>{socket.emit("activeuserlist", activeusers)},5000);
