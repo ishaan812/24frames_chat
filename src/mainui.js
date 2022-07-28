@@ -1,9 +1,5 @@
 import React,{useEffect, useState, useRef} from "react";
-<<<<<<< HEAD
 import io from 'socket.io-client'
-=======
-import {io} from "socket.io-client";
->>>>>>> parent of d64cbc3 (aa)
 import Peer from "simple-peer";
 import Editor from "./editor";
 import {
@@ -146,8 +142,11 @@ function App() {
       socket.on("badinput",()=>{
         alert("Bad Input");
       })
-      socket.on("roomexists",()=>{
-        alert("Room Exists");
+      socket.on("roomexists",(roomname)=>{
+        window.location.href="/private/"+Name+"/"+roomname;
+      })
+      socket.on("emptyroom",()=>{
+        alert("Room is Empty");
       })
     })
 

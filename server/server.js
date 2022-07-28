@@ -127,8 +127,7 @@ io.on("connection", async(socket) => {
         //     })
         // }
         else{
-            messagestring= room+":  "+message
-            socket.broadcast.to(room).emit("recievemessage", messagestring);
+            socket.broadcast.to(room).emit("recievemessage", message);
             selectid= "SELECT `UID` FROM `username` WHERE Username='"+name+"'";
             con.query (selectid, (err, result)=> {
                 console.log(result);
@@ -283,9 +282,7 @@ io.on("connection", async(socket) => {
 
 
 
-instrument(io, {auth:{ type: "basic",
-username: "admin",
-password: "$2b$10$heqvAkYMez.Va6Et2uXInOnkCT6/uQj1brkrbyG3LpopDklcq7ZOS" }})
+
 
 
 
