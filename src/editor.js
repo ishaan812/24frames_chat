@@ -3,6 +3,7 @@ import React,{useEffect} from "react";
 import ReactQuill from "react-quill";
 import EditorToolbar, { modules, formats } from "./EditorToolbar";
 import "react-quill/dist/quill.snow.css";
+import "./assets/css/chatstyle2.css";
 
 export const Editor = ({SetMessage}) => {
   const [state, setState] = React.useState({ value: null });
@@ -14,7 +15,7 @@ export const Editor = ({SetMessage}) => {
 
   return (
     <div className="text-editor">
-      <EditorToolbar />
+      <EditorToolbar id="quill"/>
       <ReactQuill
         theme="snow"
         value={state.value}

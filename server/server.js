@@ -2,6 +2,7 @@ const { instrument }= require('@socket.io/admin-ui');
 const express = require('express');
 const cors = require('cors');
 const http = require('http');
+const httpProxy = require("http-proxy");
 const mysql= require('mysql');
 const { Console } = require('console');
 const app=express();
@@ -9,6 +10,7 @@ const dotenv = require('dotenv');
 const server= http.createServer(app);
 const io = require("socket.io")(server,
     {
+        transports: ['websocket'],
         cors: {
             origin: '*',
         }
@@ -20,6 +22,7 @@ var users;
 var ids;
 var activeusers= [];
 var roomsavailable= {};
+var j;
     
 dotenv.config();
 app.use(express.json())
@@ -37,10 +40,10 @@ var con = mysql.createConnection({
     database: process.env.DB_NAME,
 });
 
+
 io.on("connection", async(socket) => {
     console.log(socket.id);
-    setInterval(()=>{socket.emit("activeuserlist", activeusers)},5000);
-    
+    setInterval(()=>{socket.emit("userlist", users,activeusers)},5000);
     socket.on("sendusername", async(Name) => {
         selectUsertablesql= "SELECT * FROM `username`";
         con.query(selectUsertablesql, async(err, result) => {
@@ -57,12 +60,11 @@ io.on("connection", async(socket) => {
                     if (err) throw err;
                     ids= [...usertable.keys()];
                     UserID=ids[users.findIndex(Name=>Name===name)];
+                    activeusers.push(Name);
+                    // socket.emit("activeuserlist", activeusers)
                 });
-                activeusers.push(Name);
-                socket.emit("activeuserlist", activeusers)
             }
             else{
-                console.log("newuser");
                 adduserquery="INSERT INTO `username` (`UID`, `Username`, `Socket`, `Date Created`) VALUES (NULL, '"+name+"', '"+socket.id+"', NOW())";
                 con.query(adduserquery, function (err, result) {
                     if (err) throw err;
@@ -74,35 +76,32 @@ io.on("connection", async(socket) => {
                         });
                         ids= [...usertable.keys()];
                         UserID=ids[users.findIndex(Name=>Name===name)];
+                        activeusers.push(Name);
+                        // socket.emit("activeuserlist", activeusers)
                     })
                 });
-                activeusers.push(Name);
-                socket.emit("activeuserlist", activeusers)
             }
         });
     })
+    
+    // socket.on("getroomlist", (Name) => {
+    //     selectUsertablesql= "SELECT UID FROM `username` WHERE Username='"+Name+"'";
+    //     roomsavailable[Name]= [];
+    //     con.query(selectUsertablesql, async(err, result) => {
+    //         UserID= result[0].UID;
+    //         joinsql="SELECT roominfo.RoomName,rooms.UID FROM `rooms` join roominfo on rooms.RoomID = roominfo.RoomID where rooms.UID="+UserID;
+    //         con.query(joinsql, async(err, result) => {
+    //             socket.emit("roomlist",result);
+    //         })
+    //     })
 
-    socket.on("getroomlist", async(Name) => {
-        selectUsertablesql= "SELECT UID FROM `username` WHERE Username='"+Name+"'";
-        roomsavailable[Name+"rooms"]=[];
-        con.query(selectUsertablesql, async(err, result) => {
-            if(err) throw err;
-            UserID=result[0].UID;
-            GetRoomssql= "SELECT * FROM `rooms` WHERE UID="+UserID;
-            con.query(GetRoomssql, async(err, roomlist) => {
-                if(err) throw err;
-                roomlist.forEach(element => { 
-                    con.query("SELECT RoomName FROM `roominfo` WHERE RoomID='"+element.RoomID+"'", function (err, roominfo) {
-                        if(err) throw err;
-                        socket.emit("roomlist", roominfo[0].RoomName);
-                    })
-                })
-                
-            });
-        })
-    })
-
+        
+    // })
+    
     socket.on("getpreviousmessages", (room) =>{
+        
+        if(room!=="general"){socket.join(room);}
+
         con.query("SELECT * FROM messages WHERE Roomname = '"+room+"'", (err, result) => {
             if (err) throw err;
             result.forEach(element => {
@@ -114,7 +113,8 @@ io.on("connection", async(socket) => {
     
     socket.on("sendmessage", (message, room, name) => {
         UserID=ids[users.findIndex(Name=>Name===name)];
-        if(room === '' || room === "general"){
+        if(message==="") socket.emit("badinput");
+        else if(room === '' || room === "general"){
             socket.broadcast.emit("recievemessage", message, name);
             selectid= "SELECT `UID` FROM `username` WHERE Username='"+name+"'";
             con.query (selectid, (err, result)=> {
@@ -127,22 +127,9 @@ io.on("connection", async(socket) => {
                 })
             })
         }
-        // if(room !== '' && type === "normal")
-        // {
-        //     socket.in(room).emit("recievemessage", messagestring);
-        //     selectid= "SELECT `UID` FROM `username` WHERE Username='"+name+"'";
-        //     con.query (selectid, (err, result)=> {
-        //         if (err) throw err;
-        //         messagesql= "INSERT INTO `messages`(`DateSent`, `UID`, `Message`, `Roomname`) VALUES (NOW(),'"+UserID+"','"+message+"','"+room+"')";
-        //         con.query(messagesql, (err, result)=> {
-        //             if (err) throw err;
-        //             console.log(result);
-        //         })
-        //     })
-        // }
         else{
-            messagestring= room+":  "+message
-            socket.broadcast.to(room).emit("recievemessage", messagestring);
+            // console.log(room);
+            socket.to(room).emit("recievemessage", message, name);
             selectid= "SELECT `UID` FROM `username` WHERE Username='"+name+"'";
             con.query (selectid, (err, result)=> {
                 console.log(result);
@@ -174,9 +161,11 @@ io.on("connection", async(socket) => {
             if(err) throw err;
             if(result.length!==0){
                 if(result[0].RoomName===roomname){
+                    socket.join(roomname);
                     socket.emit("roomexists",roomname);
                 }
                 else{
+                    socket.join(altroomname);
                     socket.emit("roomexists",altroomname);
                 }
             }
@@ -212,71 +201,32 @@ io.on("connection", async(socket) => {
         }
     })
 
-    // socket.on("creategrouproom", (groupname, UserName) => {
-    //     creategroupsql="INSERT INTO `roominfo`(`RoomID`, `Roomname`, `UserLimit`, `DateCreated`) VALUES (NULL,'"+groupname+"',100, NOW())";
-    //     con.query(creategroupsql, (err, result)=> {
-    //         con.query("SELECT * FROM roominfo WHERE Roomname='"+groupname+"'", (err, result)=>{
-    //             roomid=result[0].RoomID;
-    //             con.query("INSERT INTO `rooms`(`RoomID`, `UID`, `DateJoined`) VALUES ("+roomid+","+ids[users.findIndex(Name=>Name===UserName)]+", NOW())", (err, result)=>{
-    //             })
-    //         })
-    //     })
-    //     socket.join(groupname);
-    //     socket.emit("groupcreated", groupname);
-    // })
+    socket.on("creategrouproom", (groupname, UserName) => {
+        creategroupsql="INSERT INTO `roominfo`(`RoomID`, `Roomname`, `UserLimit`, `DateCreated`) VALUES (NULL,'"+groupname+"',100, NOW())";
+        con.query(creategroupsql, (err, result)=> {
+            con.query("SELECT * FROM roominfo WHERE Roomname='"+groupname+"'", (err, result)=>{
+                roomid=result[0].RoomID;
+                con.query("INSERT INTO `rooms`(`RoomID`, `UID`, `DateJoined`) VALUES ("+roomid+","+ids[users.findIndex(Name=>Name===UserName)]+", NOW())", (err, result)=>{
+                })
+            })
+        })
+        socket.join(groupname);
+        socket.emit("groupcreated", groupname);
+    })
 
     socket.on("joinprivateroom", (roomname) => {
         socket.emit("roomcreated", roomname);
         socket.join(roomname);
     })
 
+    socket.on("getuserlist",()=>{
+        if(users!=null)
+        {
+            socket.emit("userlist", users, activeusers);
+        }
+    })
 
     
-    // socket.on("joinroom", (room) => {
-    //     socket.join(room);
-    //     selectid= "SELECT `UID` FROM `username` WHERE Username='"+name+"'";
-    //     con.query (selectid, (err, result)=> {
-    //         if (err) throw err;
-    //         console.log(UserID);
-    //         insertroom= "INSERT INTO `rooms` (`RoomName`, `UID`, `DateJoined`) VALUES ('"+room+"', '"+UserID+"', NOW())";
-    //         con.query (insertroom, (err, result)=> {
-    //             if(err) throw err;
-    //             console.log(result);
-    //         });
-    //     });
-
-    // });
-
-    socket.on("getuserlist",(room)=>{
-        var newuserlist= [];
-        // room="general";
-        if(room === '' || room === "general"){
-            socket.emit("userlist", users);
-        }
-        else{
-            selectroomidsql="SELECT `RoomID` FROM `roominfo` WHERE Roomname='"+room+"'";
-            con.query(selectroomidsql, (err, result)=> {
-                roomid=result[0].RoomID;
-                userlistsql= "SELECT UID FROM `rooms` WHERE RoomID='"+roomid+"'";
-                con.query (userlistsql, (err, result)=> {
-                    if (err) throw err;
-                    if(result.length!==0)
-                    {
-                    result.forEach(element => {
-                        element.Name=usertable.get(element.UID);
-                        newuserlist.push(element.Name);
-                    })
-                    socket.emit("userlist", newuserlist);
-                    }
-                    else{
-                        socket.emit("EMPTYROOM");
-                    }
-                })
-                
-            })
-            }
-        }
-    )
 
     // socket.on("calluser", (data)=>{
     //     console.log(data);
@@ -288,6 +238,7 @@ io.on("connection", async(socket) => {
         socket.broadcast.emit("call disconnect"); 
         console.log("disconnected " + socket.id);
         
+        socket.disconnect();
         con.query("SELECT * FROM `username` WHERE Socket='"+socket.id+"'", (err, result)=> {
             if(err) throw console.log("username error");
             if(result.length===0){console.log("UserError")}
@@ -302,6 +253,12 @@ io.on("connection", async(socket) => {
     
 })
 
+// httpProxy
+//   .createProxyServer({
+//     target: "http://localhost:3000",
+//     ws: true,
+//   })
+//   .listen(80);
 
 
 

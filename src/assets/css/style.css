@@ -1,0 +1,94 @@
+
+.bg{
+    background: linear-gradient(180deg, rgba(51,87,255,1) 50%, rgba(255,255,255,1) 50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+}
+.page-bg{
+    width: 75%;
+    display: flex;
+    height: 80vh;
+    background-color: #fff;
+    border-radius: 35px;
+    box-shadow: rgb(0 0 0 / 29%) 0px 10px 36px 0px, rgb(0 0 0 / 0%) 0px 0px 0px 1px;
+}
+
+.bg-blue{
+    background-color:rgb(130 152 255 / 70%);
+    border-radius: 20px 0px 0 20px;
+    border: 5px solid #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+}
+.login_img{
+    padding:6%;
+}
+.bg-form{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+}
+
+.form-group{
+    width: 80%;
+    margin-bottom: 20px;
+}
+.log_btn{
+    background-color: rgb(70, 70, 245);
+    padding: 5px 17px;
+    border-radius: 10px;
+    margin-top: 6%;
+    color: #fff;
+    width: fit-content;
+    margin-bottom: 5%;
+
+}
+.gog{
+    padding:5px 20px;
+    border-radius: 8px;
+    background-color: #a7b7ff;
+    color: rgb(65, 65, 65);
+    border: none;
+    box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;
+}
+
+.form-control {
+    display: block;
+    width: 100%;
+    height: 35px;
+    padding: 6px 12px;
+    font-size: 14px;
+    line-height: 1.2;
+    color: rgb(85, 85, 85);
+    border-radius: 0px 0px 0px 0px;
+    box-shadow: none;
+
+}
+.icon-holder {
+    width: 100%;
+    display: table;
+    border-bottom: 2px solid #bdbdbd;
+}
+
+.icon-holder label {
+    width: 30px;
+    color: rgb(130 152 255 / 70%);
+    display: table-cell;
+    text-align: center;
+    vertical-align: middle;
+    background-color: #fff;
+    font-size: 20px;
+    border-radius: 20px 0px 0px 20px;
+}
+
+.form-control{
+    border: none;
+}
+.googlesign{
+    margin-left:5px ;
+}

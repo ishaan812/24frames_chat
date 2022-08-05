@@ -1,18 +1,14 @@
 import React,{useEffect, useState, useRef} from "react";
-<<<<<<< Updated upstream
-import {io} from "socket.io-client";
-=======
 import io from 'socket.io-client'
->>>>>>> Stashed changes
 import Peer from "simple-peer";
 import Editor from "./editor";
 import {
   BrowserRouter as Router,
   Redirect,
-  Routes,
   Route,
   Link,
-  useParams
+  useParams,
+  useNavigate
 } from "react-router-dom";
 import { data } from "autoprefixer";
 
@@ -27,12 +23,14 @@ function App({Type}) {
   const [CallAccepted, setCallAccepted] = useState("");
   const [callended, setcallended] = useState("");
   const [Message, setMessage] = useState();
-  const Room = useParams().room;
+  const Room = "general";
   const [otherusername, Setotherusername] = useState("");
   const [groupname,Setgroupname]= useState("");
+  const navigate =useNavigate();
 
 
-  // const myvideo= useRef(null);
+
+  const myvideo= useRef(null);
   // const uservideo= useRef(null);
   // const connectionref = useRef(null);
 
@@ -45,7 +43,8 @@ function App({Type}) {
   const displayUsers=(users)=>{
     let userwindow=document.getElementById("userwindow")
     userwindow.innerHTML="";
-    users.forEach(element => {
+    let set1= new Set(users);
+    set1.forEach(element => {
       const userbox= document.createElement("div");
       userbox.innerHTML= "<button id="+element+" style='border-radius: 4px; background-color: #008CBA; margin-top: 10px; font-size: 30px;'>"+element+"</button>";
       userwindow.appendChild(userbox);
@@ -59,6 +58,8 @@ function App({Type}) {
   }
 
   const displayId=(Id)=>{
+    let idwindow=document.getElementById("id")
+    idwindow.innerHTML="";
     const idbox= document.createElement("div");
     idbox.innerHTML="<p>"+Name+": "+Id+"</p>";
     document.getElementById("id").appendChild(idbox);
@@ -88,23 +89,28 @@ function App({Type}) {
   }
 
   useEffect(() => {
-    console.log(Name);
-    socket= io("http://localhost:3000");
+    socket= io("localhost:3000",{
+      transports: ['websocket'],
+    });
     setId(socket.id);
-    // navigator.mediaDevices.getUserMedia({video: true, audio: true}).then((stream)=>{
-    //   setStream(stream);
-      // myvideo.current.srcObject=stream;
-    // });
+    navigator.mediaDevices.getUserMedia({video: true, audio: true}).then((stream)=>{
+      setStream(stream);
+      myvideo.current.srcObject=stream;
+    });
     socket.on('connect', ()=>{
       displayId(socket.id);
 
       socket.emit("sendusername", Name);
       socket.emit("getpreviousmessages", Room);
       socket.emit("getuserlist", Room);
+      document.getElementById('roomwindow').innerHTML="";
       socket.emit("getroomlist", Name);
 
       socket.on("roomlist", (roomlist)=>{
-        displayRooms(roomlist);
+        let roomnames=[];
+        roomlist.forEach(room=>{roomnames.push(room.RoomName)});
+        var set= new Set(roomnames);
+        set.forEach(room=>{displayRooms(room)});
       })
 
       socket.on("privateroomrequest", (roomname)=>{
@@ -113,10 +119,12 @@ function App({Type}) {
 
       socket.on("roomcreated", (roomname)=>{
         console.log("created room");
-        window.location.href= "/private/"+Name+"/"+roomname;
+        // navigate("/private/"+Name+"/"+roomname);
+        Room = roomname;
       })
 
       socket.on("previousmessages", (data) =>{
+        document.getElementById('chatwindow').innerHTML="";
         data.forEach(element => {
             displayMessage(element.Message, element.Name);
           }
@@ -134,7 +142,7 @@ function App({Type}) {
 
       socket.on("groupcreated", (groupname) => {
         console.log("created group");
-        window.location.href= "/"+Name+"/"+groupname;
+        navigate("/"+Name+"/"+groupname);
       })
       
 
@@ -142,7 +150,7 @@ function App({Type}) {
         alert("Bad Input");
       })
       socket.on("roomexists",(roomname)=>{
-        window.location.href="/private/"+Name+"/"+roomname;
+        navigate("/private/"+Name+"/"+roomname);
       })
       socket.on("emptyroom",()=>{
         alert("Room is Empty");
@@ -156,7 +164,7 @@ function App({Type}) {
     //   setRecievingCall(true);
     // })
 
-  }, []);
+  }, [Room]);
 
   //video calling
   // const calluser= (e) =>{
@@ -203,7 +211,7 @@ function App({Type}) {
   return (
     <div className="App">
 
-      <Editor SetMessage={MessageChild}/>
+      <Editor SetMessage={MessageChild}/>  
       
       <div className="grid grid-cols-2">
         <div>
@@ -228,14 +236,13 @@ function App({Type}) {
       
       <button onClick={(e)=>{SendMessage(e)}} type="button" className="w-full text-white bg-blue-700 hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 font-medium rounded-full text-sm px-16 py-2.5 text-center mr-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">Submit</button>
       
-      {/* <div id="chatwindow" className="border border-red-200"></div>  */}
       <br/>
 
       {/* <input name="id to call" onChange={(e)=>{setCallerId(e.target.value);console.log(callerId)}} placeholder="id to call"></input><br/>
       <button onClick={(e)=>{calluser(e)}}>Call User</button><br/> */}
 
-      {/* <video ref={myvideo} autoPlay muted style={{width: "300px"}} />
-      <video ref={uservideo} playsInline autoPlay style={{width: "300px"}} /> */}
+      <video ref={myvideo} autoPlay muted style={{width: "300px"}} />
+      <video ref={uservideo} playsInline autoPlay style={{width: "300px"}} /> 
 
 
       <div className="grid grid-cols-3 gap-2">
@@ -252,8 +259,9 @@ function App({Type}) {
           <div id="roomwindow" className="w-1/3"></div>
         </div>
       </div>
-      
+       
     </div>
+    
   );
 }
 

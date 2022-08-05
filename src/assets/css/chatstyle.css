@@ -1,0 +1,127 @@
+.chat-bg::-webkit-scrollbar {
+    width: 10px;
+    background-color: #bdbdbd;
+    scrollbar-color: #6969dd 
+}
+/* Handle on hover */
+.chat-bg::-webkit-scrollbar-thumb:hover {
+    background: #b30000; 
+  }
+
+
+.chat-bg {
+   
+    scrollbar-width: thin;
+}
+
+.chat-head{
+    background-color: #3357FF;
+}
+
+.fdlogo {
+    padding:8px 10px;   
+}
+
+.chat-bg{
+    background-color: #F9F6F6;
+    height: 85vh;
+    border-left: 1px solid #e2e2e2;
+    overflow-y: scroll;
+}
+
+.chatbox-head{
+    background-color: #fff;
+    border-bottom: 1px solid #e2e2e2;
+    display: flex;
+    align-items: center;
+}
+
+.user-img {
+width: 60px;
+height: 60px;
+border-radius: 40px;
+background-color: aqua;
+float: right;
+margin-left: 13px;
+border: 5px solid #fff;
+}
+
+.user-info{
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: flex-end;
+
+}
+.username{
+    color: #fff;
+}
+
+.user1{
+    background-color: #f9f6f6;
+    height: 55px;
+    border-radius: 0px;
+    display: flex;
+    align-items: center;
+    justify-content: left;
+    position: relative;
+    margin-bottom: 15px;
+    /* border-bottom: 1px solid #e2e2e2; */
+}
+.user1 h5{
+    margin: 0;
+    color: #545454;
+    margin-left: 15px;
+    font-size: 16px;
+}
+.avtar{
+    width: 35px;
+    height: 35px;
+    margin-left: 20px;
+}
+.onlineicon{
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    border-radius: 100%;
+    background: #47d71a;
+    left: 15%;
+    bottom: 27%;
+}
+
+.user1:hover{
+    background-color: #fff;
+    box-shadow: rgba(0, 0, 0, 0.1) 0px 4px 12px;
+}
+
+.module_holder {
+    /* width: 200px;
+    height: 100px;
+    padding: 4px;
+    position: absolute; */
+    background-color: rgb(207, 207, 207);
+    border-radius: 10px;
+    min-height: 400px;
+    width: 300px;
+    position: fixed;
+    z-index: 0;
+    display: block;
+    bottom: 0;
+}
+.closeBtn{
+    width: 20px;
+    height: 20px;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 1;
+    padding:10px ;
+    background-color: #f00;
+}
+.module_item {
+    /* background-color: #069; */
+    width: 100px;
+    padding: 2px;
+    height: 5px;
+}
